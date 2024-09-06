@@ -37,7 +37,7 @@ jobs:
             cd services/$service
             pip install -r requirements.txt
             pytest
-            cd ../..
+            cd ../.. 
           done
 
       - name: Run Integration Tests
@@ -55,19 +55,13 @@ jobs:
           docker stop crypto-price-service transaction-service account-service
           docker rm crypto-price-service transaction-service account-service
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v1
-        with:
-          version: '1.21.0' # Use the version compatible with your Kubernetes cluster
-
       - name: Set up kubeconfig
         run: |
-          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+          echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+          kubectl config use-context ${{ secrets.KUBE_CONTEXT }}
 
       - name: Deploy to Kubernetes (Blue-Green Deployment)
         run: |
-          kubectl config use-context ${{ secrets.KUBE_CONTEXT }}
-          
           services=("crypto-price-service" "transaction-service" "account-service")
           namespace="default"
           for service in "${services[@]}"; do
