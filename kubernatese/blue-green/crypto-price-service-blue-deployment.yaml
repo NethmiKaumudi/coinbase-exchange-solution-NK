@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crypto-price-service-blue
+  namespace: blue
+  labels:
+    app: crypto-price-service
+    version: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crypto-price-service
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: crypto-price-service
+        version: blue
+    spec:
+      containers:
+        - name: crypto-price-service
+          image: <docker-username>/crypto-price-service:latest
+          ports:
+            - containerPort: 5001

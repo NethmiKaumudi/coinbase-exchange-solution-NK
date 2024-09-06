@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-service-blue
+  namespace: blue
+  labels:
+    app: account-service
+    version: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: account-service
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: account-service
+        version: blue
+    spec:
+      containers:
+        - name: account-service
+          image: <docker-username>/account-service:latest
+          ports:
+            - containerPort: 5003

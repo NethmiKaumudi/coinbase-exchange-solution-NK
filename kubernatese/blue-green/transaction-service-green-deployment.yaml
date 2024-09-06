@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-service-green
+  namespace: green
+  labels:
+    app: transaction-service
+    version: green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: transaction-service
+      version: green
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+        version: green
+    spec:
+      containers:
+        - name: transaction-service
+          image: <docker-username>/transaction-service:latest
+          ports:
+            - containerPort: 5002

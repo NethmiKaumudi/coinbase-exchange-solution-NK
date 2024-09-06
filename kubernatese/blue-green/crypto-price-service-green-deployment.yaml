@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crypto-price-service-green
+  namespace: green
+  labels:
+    app: crypto-price-service
+    version: green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crypto-price-service
+      version: green
+  template:
+    metadata:
+      labels:
+        app: crypto-price-service
+        version: green
+    spec:
+      containers:
+        - name: crypto-price-service
+          image: <docker-username>/crypto-price
