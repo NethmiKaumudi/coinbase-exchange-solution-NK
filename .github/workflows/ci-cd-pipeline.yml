@@ -1,3 +1,47 @@
+#name: CI/CD Pipeline
+#
+#on:
+#  push:
+#    branches:
+#      - master
+#  pull_request:
+#    branches:
+#      - master
+#
+#jobs:
+#  build-and-test:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#    - name: Checkout code
+#      uses: actions/checkout@v2
+#
+#    - name: Set up Docker Buildx
+#      uses: docker/setup-buildx-action@v2
+#
+#    - name: Log in to Docker Hub
+#      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+#
+#    - name: Build, Push Docker Images, and Run Unit Tests
+#      run: |
+#        services=("crypto-price-service" "transaction-service" "account-service")
+#        for service in "${services[@]}"; do
+#          # Build Docker image
+#          docker build -t ${{ secrets.DOCKER_USERNAME }}/$service:latest ./services/$service
+#          # Push Docker image
+#          docker push ${{ secrets.DOCKER_USERNAME }}/$service:latest
+#          # Run unit tests
+#          cd services/$service
+#          pip install -r requirements.txt
+#          pytest
+#          cd ../..
+#        done
+#
+#    - name: Clean up
+#      run: |
+#        docker system prune -af
+
+
 name: CI/CD Pipeline
 
 on:
@@ -29,9 +73,8 @@ jobs:
             docker build -t ${{ secrets.DOCKER_USERNAME }}/$service:latest ./services/$service
             docker push ${{ secrets.DOCKER_USERNAME }}/$service:latest
           done
-
-      - name: Install Dependencies and Run Unit Tests
-        run: |
+          
+            run: |
           services=("crypto-price-service" "transaction-service" "account-service")
           for service in "${services[@]}"; do
             cd services/$service
@@ -42,40 +85,23 @@ jobs:
 
       - name: Run Integration Tests
         run: |
+          # Start the services with correct ports
           docker run -d --name crypto-price-service -p 5001:5001 ${{ secrets.DOCKER_USERNAME }}/crypto-price-service:latest
           docker run -d --name transaction-service -p 5002:5002 ${{ secrets.DOCKER_USERNAME }}/transaction-service:latest
           docker run -d --name account-service -p 5003:5003 ${{ secrets.DOCKER_USERNAME }}/account-service:latest
           
+          # Wait for services to start up
           sleep 30
           
+          # Run integration tests
+          # Replace with your actual test commands
           curl -f http://localhost:5001/crypto-prices || exit 1
           curl -f http://localhost:5002/transactions || exit 1
           curl -f http://localhost:5003/accounts || exit 1
           
+          # Stop and remove the services
           docker stop crypto-price-service transaction-service account-service
           docker rm crypto-price-service transaction-service account-service
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v1
-        with:
-          version: '1.21.0' # Use the version compatible with your Kubernetes cluster
-
-      - name: Deploy to Kubernetes (Blue-Green Deployment)
-        run: |
-          kubectl config use-context ${{ secrets.KUBE_CONTEXT }}
-          
-          services=("crypto-price-service" "transaction-service" "account-service")
-          namespace="default"
-          for service in "${services[@]}"; do
-            # Create/update blue deployment
-            kubectl apply -f kubernetes/blue-green/$service-blue-deployment.yaml --namespace=$namespace
-          
-            # Create/update green deployment
-            kubectl apply -f kubernetes/blue-green/$service-green-deployment.yaml --namespace=$namespace
-            
-            # Switch the service to the green deployment
-            kubectl patch service $service -p '{"spec":{"selector":{"version":"green"}}}' --namespace=$namespace
-          done
 
       - name: Clean up
         run: |
