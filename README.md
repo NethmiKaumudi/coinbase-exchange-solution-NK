@@ -13,9 +13,9 @@ This project involves designing and implementing a container-based solution for 
   - [Deploy to AWS EKS](#deploy-to-aws-eks)
   - [Run Automated Tests](#run-automated-tests)
 - [Rollback Procedure](#rollback-procedure)
-- [Documentation](#documentation)
 - [CI/CD Pipeline](#cicd-pipeline)
 - [Testing](#testing)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -25,43 +25,43 @@ This project aims to create a highly available and secure container-based servic
 
 ## Prerequisites
 
-- **AWS EKS Cluster**: Set up and accessible.
-- **Docker Hub Account**: For storing Docker images.
-- **GitHub Repository**: For managing code and CI/CD pipeline.
-- **Kubernetes Manifests**: Blue-Green deployment configuration files.
-- **Secrets**: Docker credentials and kubeconfig stored in GitHub secrets.
+- **AWS EKS Cluster:** Set up and accessible.
+- **Docker Hub Account:** For storing Docker images.
+- **GitHub Repository:** For managing code and CI/CD pipeline.
+- **Kubernetes Manifests:** Blue-Green deployment configuration files.
+- **Secrets:** Docker credentials and kubeconfig stored in GitHub secrets.
 
 ## Deployment Steps
 
 ### Build and Push Docker Images
 
-1. **Trigger Pipeline**:
+1. **Trigger Pipeline:**
    - Commit to the `main` branch or open a pull request to trigger the CI/CD pipeline.
 
-2. **Pipeline Actions**:
+2. **Pipeline Actions:**
    - Checkout code.
    - Build Docker images for each microservice.
    - Push Docker images to Docker Hub.
 
 ### Deploy to AWS EKS
 
-1. **Set Up kubeconfig**:
+1. **Set Up kubeconfig:**
    - Ensure `kubectl` is configured with the correct Kubernetes context.
 
-2. **Apply Kubernetes Manifests**:
-   - **Deploy Blue Environment**:
+2. **Apply Kubernetes Manifests:**
+   - **Deploy Blue Environment:**
      ```bash
      kubectl apply -f kubernetes/blue-green/crypto-price-service-blue-deployment.yaml --namespace=default
      kubectl apply -f kubernetes/blue-green/transaction-service-blue-deployment.yaml --namespace=default
      kubectl apply -f kubernetes/blue-green/account-service-blue-deployment.yaml --namespace=default
      ```
-   - **Deploy Green Environment**:
+   - **Deploy Green Environment:**
      ```bash
      kubectl apply -f kubernetes/blue-green/crypto-price-service-green-deployment.yaml --namespace=default
      kubectl apply -f kubernetes/blue-green/transaction-service-green-deployment.yaml --namespace=default
      kubectl apply -f kubernetes/blue-green/account-service-green-deployment.yaml --namespace=default
      ```
-   - **Switch Traffic to Green Deployment**:
+   - **Switch Traffic to Green Deployment:**
      ```bash
      kubectl patch service crypto-price-service -p '{"spec":{"selector":{"version":"green"}}}' --namespace=default
      kubectl patch service transaction-service -p '{"spec":{"selector":{"version":"green"}}}' --namespace=default
@@ -70,11 +70,11 @@ This project aims to create a highly available and secure container-based servic
 
 ### Run Automated Tests
 
-- **Integration Tests**:
+- **Integration Tests:**
   - Automatically triggered by the CI/CD pipeline.
   - Verify service accessibility and functionality using HTTP requests.
 
-- **Manual Verification**:
+- **Manual Verification:**
   - Check service status:
     ```bash
     kubectl get services --namespace=default
@@ -92,8 +92,12 @@ This project aims to create a highly available and secure container-based servic
 
 ## Rollback Procedure
 
-1. **Switch Traffic to Blue Deployment**:
+1. **Switch Traffic to Blue Deployment:**
    ```bash
    kubectl patch service crypto-price-service -p '{"spec":{"selector":{"version":"blue"}}}' --namespace=default
    kubectl patch service transaction-service -p '{"spec":{"selector":{"version":"blue"}}}' --namespace=default
    kubectl patch service account-service -p '{"spec":{"selector":{"version":"blue"}}}' --namespace=default
+
+
+## Documentation
+  Runbook: Available in the repository root, detailing deployment and testing procedures.
