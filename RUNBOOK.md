@@ -146,6 +146,13 @@ KUBE_CONTEXT (Kubeconfig context to use)
 
 7,** Set up kubeconfig**
 
+## Set up Kubernetes (AWS EKS)
+
+Ensure your EKS cluster is running:
+
+Go to ** AWS Console > EKS ** and follow steps to create a cluster.
+Set up your KUBECONFIG and KUBE_CONTEXT locally:
+
 - name: Set up kubeconfig
   run: |
   echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
@@ -191,3 +198,40 @@ To run the unit tests locally, navigate to the root directory of each service an
 3. **Adjusted File Names and Paths:** Ensured consistent use of paths and file names throughout the document.
 
 Feel free to adjust the file names and paths to match your project structure. This runbook provides a clear outline of the CI/CD pipeline and helps maintain consistency across deployments.
+
+# Troubleshooting Guide
+
+### Error: Kubernetes Pods Not Starting
+
+- **Check pod logs for errors:**
+  ```bash
+  kubectl logs <pod_name>
+  ```
+- **Ensure that `KUBECONFIG` and `KUBE_CONTEXT` are properly set.**
+
+---
+
+### Error: Docker Image Not Found
+
+- **Ensure the Docker image is correctly tagged and pushed:**
+  ```bash
+  docker images | grep <service_name>
+  docker push <docker_username>/<service_name>:latest
+  ```
+
+---
+
+### Error: Service Not Accessible
+
+- **Verify the service is correctly exposed:**
+  ```bash
+  kubectl get services
+  ```
+
+---
+
+### Test Failures
+
+- **Run the tests locally and check for:**
+  - Python-related issues
+  - Incorrect API endpoints in integration tests
