@@ -68,7 +68,7 @@ This project aims to create a highly available and secure container-based servic
      kubectl patch service account-service -p '{"spec":{"selector":{"version":"green"}}}' --namespace=default
      ```
 
-### Run Automated Tests
+### Run Automated  Tests
 
 - **Integration Tests:**
   - Automatically triggered by the CI/CD pipeline.
