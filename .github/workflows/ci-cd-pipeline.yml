@@ -104,7 +104,6 @@ jobs:
 
       - name: Build and Push Docker Images
         run: |
-          set -x
           services=("crypto-price-service" "transaction-service" "account-service")
           for service in "${services[@]}"; do
             docker build -t ${{ secrets.DOCKER_USERNAME }}/$service:latest ./services/$service
@@ -113,7 +112,6 @@ jobs:
 
       - name: Install Dependencies and Run Unit Tests
         run: |
-          set -x
           services=("crypto-price-service" "transaction-service" "account-service")
           for service in "${services[@]}"; do
             cd services/$service
@@ -124,34 +122,26 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          set -x
           docker run -d --name crypto-price-service -p 5001:5001 ${{ secrets.DOCKER_USERNAME }}/crypto-price-service:latest
           docker run -d --name transaction-service -p 5002:5002 ${{ secrets.DOCKER_USERNAME }}/transaction-service:latest
           docker run -d --name account-service -p 5003:5003 ${{ secrets.DOCKER_USERNAME }}/account-service:latest
           
           sleep 30
           
-          curl -f http://localhost:5001/crypto-prices || exit 1
-          curl -f http://localhost:5002/transactions || exit 1
-          curl -f http://localhost:5003/accounts || exit 1
+          curl -f http://localhost:5001/crypto-prices || { echo 'Crypto Price Service failed'; exit 1; }
+          curl -f http://localhost:5002/transactions || { echo 'Transaction Service failed'; exit 1; }
+          curl -f http://localhost:5003/accounts || { echo 'Account Service failed'; exit 1; }
           
           docker stop crypto-price-service transaction-service account-service
           docker rm crypto-price-service transaction-service account-service
 
       - name: Set up kubeconfig
         run: |
-          set -x
           echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
           kubectl config use-context ${{ secrets.KUBE_CONTEXT }}
 
-      - name: Debug Kubernetes Files
-        run: |
-          cat kubernetes/blue-green/crypto-price-service-blue-deployment.yaml
-          cat kubernetes/blue-green/crypto-price-service-green-deployment.yaml
-
       - name: Deploy to Kubernetes (Blue-Green Deployment)
         run: |
-          set -x
           services=("crypto-price-service" "transaction-service" "account-service")
           namespace="default"
           for service in "${services[@]}"; do
@@ -165,12 +155,6 @@ jobs:
             kubectl patch service $service -p '{"spec":{"selector":{"version":"green"}}}' --namespace=$namespace
           done
 
-      - name: Check Kubernetes Deployments
-        run: |
-          kubectl get deployments --namespace=default
-          kubectl describe deployments crypto-price-service --namespace=default
-
       - name: Clean up
         run: |
-          set -x
           docker system prune -af
