@@ -106,7 +106,9 @@ jobs:
         run: |
           services=("crypto-price-service" "transaction-service" "account-service")
           for service in "${services[@]}"; do
+            echo "Building $service"
             docker build -t ${{ secrets.DOCKER_USERNAME }}/$service:latest ./services/$service
+            echo "Pushing $service"
             docker push ${{ secrets.DOCKER_USERNAME }}/$service:latest
           done
 
@@ -114,24 +116,28 @@ jobs:
         run: |
           services=("crypto-price-service" "transaction-service" "account-service")
           for service in "${services[@]}"; do
+            echo "Installing dependencies and testing $service"
             cd services/$service
             pip install -r requirements.txt
-            pytest
+            pytest || { echo "Tests failed for $service"; exit 1; }
             cd ../.. 
           done
 
       - name: Run Integration Tests
         run: |
+          echo "Starting Docker containers"
           docker run -d --name crypto-price-service -p 5001:5001 ${{ secrets.DOCKER_USERNAME }}/crypto-price-service:latest
           docker run -d --name transaction-service -p 5002:5002 ${{ secrets.DOCKER_USERNAME }}/transaction-service:latest
           docker run -d --name account-service -p 5003:5003 ${{ secrets.DOCKER_USERNAME }}/account-service:latest
           
           sleep 30
           
+          echo "Running integration tests"
           curl -f http://localhost:5001/crypto-prices || { echo 'Crypto Price Service failed'; exit 1; }
           curl -f http://localhost:5002/transactions || { echo 'Transaction Service failed'; exit 1; }
           curl -f http://localhost:5003/accounts || { echo 'Account Service failed'; exit 1; }
           
+          echo "Stopping Docker containers"
           docker stop crypto-price-service transaction-service account-service
           docker rm crypto-price-service transaction-service account-service
 
@@ -145,13 +151,9 @@ jobs:
           services=("crypto-price-service" "transaction-service" "account-service")
           namespace="default"
           for service in "${services[@]}"; do
-            # Create/update blue deployment
+            echo "Deploying $service"
             kubectl apply -f kubernetes/blue-green/$service-blue-deployment.yaml --namespace=$namespace
-          
-            # Create/update green deployment
             kubectl apply -f kubernetes/blue-green/$service-green-deployment.yaml --namespace=$namespace
-            
-            # Switch the service to the green deployment
             kubectl patch service $service -p '{"spec":{"selector":{"version":"green"}}}' --namespace=$namespace
           done
 
