@@ -19,5 +19,7 @@ spec:
         version: green
     spec:
       containers:
-        - name: crypto-price-service
-          image: <docker-username>/crypto-price
+        - name: transaction-service
+          image: <docker-username>/transaction-service:latest
+          ports:
+            - containerPort: 5001
